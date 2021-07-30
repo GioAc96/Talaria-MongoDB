@@ -4,7 +4,7 @@
   "description": "Persistence layer for Talaria on MongoDB",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,15 @@
   },
   "homepage": "https://github.com/GioAc96/Talaria-MongoDB#readme",
   "dependencies": {
+    "mongodb": "^4.0.1",
     "talaria": "^3.0.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^7.3.4",
+    "@types/mongodb": "^4.0.7",
+    "typescript": "^4.3.5",
+    "@types/jest": "^26.0.24",
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.3"
   }
 }
