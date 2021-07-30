@@ -1,0 +1,26 @@
+{
+  "name": "talaria-mongodb",
+  "version": "0.0.1",
+  "description": "Persistence layer for Talaria on MongoDB",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GioAc96/Talaria-MongoDB.git"
+  },
+  "author": {
+    "name": "Giorgio Acquati",
+    "email": "gioac96@gmail.com",
+    "url": "https://acquati.dev/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GioAc96/Talaria-MongoDB/issues"
+  },
+  "homepage": "https://github.com/GioAc96/Talaria-MongoDB#readme",
+  "dependencies": {
+    "talaria": "^3.0.0"
+  }
+}
