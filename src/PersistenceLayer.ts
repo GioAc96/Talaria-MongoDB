@@ -1,13 +1,13 @@
-import {Entity, EntityEvent, EntityEventsListener, Identifiable, EntitySerializer} from 'talaria'
+import {Entity, EntityEvent, EntityEventsListener, EntitySerializer, Identifiable} from 'talaria'
 import {Collection, ObjectId} from "mongodb";
 
 type Task = () => Promise<void>
 
 export class PersistenceLayer<D extends Identifiable> implements EntityEventsListener<D> {
 
-    readonly collection: Collection
     private static readonly tasks: Task[] = []
-    private readonly serializer
+    readonly collection: Collection
+    readonly serializer
 
     constructor(collection: Collection, serializer: EntitySerializer<D>) {
 
@@ -38,11 +38,31 @@ export class PersistenceLayer<D extends Identifiable> implements EntityEventsLis
 
     }
 
+    _notifyOfEntityEvent(entity: Entity<D>, event: EntityEvent): void {
+
+        switch (event) {
+
+            case EntityEvent.CREATED:
+                this.entityCreated(entity)
+                break
+
+            case EntityEvent.POST_UPDATE:
+                this.entityUpdated(entity)
+                break
+
+            case EntityEvent.PRE_DELETE:
+                this.entityDeleted(entity)
+                break
+
+        }
+
+    }
+
     private entityToDocument(entity: Entity<D>): any {
 
         const document: any = this.serializer.serialize(entity)
 
-        document._id = document.id
+        document._id = new ObjectId(document.id)
         delete document.id
 
         return document
@@ -65,26 +85,6 @@ export class PersistenceLayer<D extends Identifiable> implements EntityEventsLis
 
     }
 
-    _notifyOfEntityEvent(entity: Entity<D>, event: EntityEvent): void {
-
-        switch (event) {
-
-            case EntityEvent.CREATED:
-                this.entityCreated(entity)
-                break
-
-            case EntityEvent.POST_UPDATE:
-                this.entityUpdated(entity)
-                break
-
-            case EntityEvent.PRE_DELETE:
-                this.entityDeleted(entity)
-                break
-
-        }
-
-    }
-
     private entityUpdated(entity: Entity<D>): void {
 
         const document = this.entityToDocument(entity)
@@ -92,7 +92,7 @@ export class PersistenceLayer<D extends Identifiable> implements EntityEventsLis
 
         PersistenceLayer.pushTask(async () => {
 
-            await this.collection.updateOne({_id: id}, document)
+            await this.collection.replaceOne({_id: id}, document)
 
         })
 
