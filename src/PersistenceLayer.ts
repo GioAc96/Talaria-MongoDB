@@ -1,52 +1,112 @@
-import {Entity, EntityEventsListener} from "talaria";
-import {Collection} from 'mongodb'
+import {Entity, EntityEvent, EntityEventsListener, Identifiable, EntitySerializer} from 'talaria'
+import {Collection, ObjectId} from "mongodb";
 
-export class PersistenceLayer<E extends Entity<E>> implements EntityEventsListener<E>{
+type Task = () => Promise<void>
 
-    private readonly collection: Collection
+export class PersistenceLayer<D extends Identifiable> implements EntityEventsListener<D> {
 
-    constructor(
-        mongoDBCollection: Collection
-    ) {
+    readonly collection: Collection
+    private static readonly tasks: Task[] = []
+    private readonly serializer
 
-        this.collection = mongoDBCollection
+    constructor(collection: Collection, serializer: EntitySerializer<D>) {
+
+        this.collection = collection
+        this.serializer = serializer
 
     }
 
-    _notifyOfCreation(createdEntity: E): void {
+    private static async runTasks() {
 
-        const document = createdEntity.$queryObject({})
+        while (PersistenceLayer.tasks.length > 0) {
 
-        console.log(document)
+            await (PersistenceLayer.tasks.shift() as Task)()
+
+        }
+
+    }
+
+    private static pushTask(task: Task): void {
+
+        PersistenceLayer.tasks.push(task)
+
+        if (PersistenceLayer.tasks.length === 1) {
+
+            this.runTasks()
+
+        }
+
+    }
+
+    private entityToDocument(entity: Entity<D>): any {
+
+        const document: any = this.serializer.serialize(entity)
 
         document._id = document.id
         delete document.id
 
-        this.collection.insertOne(document).then()
+        return document
 
     }
 
-    _notifyPostUpdate(updatedEntity: E): void {
+    private entityObjectId(entity: Entity<D>): ObjectId {
 
-        const document = updatedEntity.$queryObject(true)
-
-        const id = document.id
-        delete document.id
-
-        this.collection.updateOne(
-            {_id: id},
-            document
-        ).then()
+        return new ObjectId(entity.id)
 
     }
 
-    _notifyPreDeletion(deletedEntity: E): void {
+    private entityCreated(entity: Entity<D>): void {
 
-        this.collection.deleteOne({_id: deletedEntity.id}).then()
+        const document = this.entityToDocument(entity)
+
+        PersistenceLayer.pushTask(async () => {
+            await this.collection.insertOne(document)
+        })
 
     }
 
-    _notifyPreUpdate(updatedEntity: E): void {
+    _notifyOfEntityEvent(entity: Entity<D>, event: EntityEvent): void {
+
+        switch (event) {
+
+            case EntityEvent.CREATED:
+                this.entityCreated(entity)
+                break
+
+            case EntityEvent.POST_UPDATE:
+                this.entityUpdated(entity)
+                break
+
+            case EntityEvent.PRE_DELETE:
+                this.entityDeleted(entity)
+                break
+
+        }
+
     }
 
+    private entityUpdated(entity: Entity<D>): void {
+
+        const document = this.entityToDocument(entity)
+        const id = this.entityObjectId(entity)
+
+        PersistenceLayer.pushTask(async () => {
+
+            await this.collection.updateOne({_id: id}, document)
+
+        })
+
+    }
+
+    private entityDeleted(entity: Entity<D>): void {
+
+        const id = this.entityObjectId(entity)
+
+        PersistenceLayer.pushTask(async () => {
+
+            await this.collection.deleteOne({_id: id})
+
+        })
+
+    }
 }
