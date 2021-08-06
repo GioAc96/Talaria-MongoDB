@@ -1,6 +1,6 @@
 {
   "name": "talaria-mongodb",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "Persistence layer for Talaria on MongoDB",
   "main": "dist/index.js",
   "scripts": {
