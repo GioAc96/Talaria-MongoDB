@@ -23,7 +23,7 @@
   "dependencies": {
     "io-ts": "^2.2.16",
     "mongodb": "^4.0.1",
-    "talaria": "^5.1.0"
+    "talaria": "^6.0.0"
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",
