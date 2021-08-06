@@ -1,5 +1,5 @@
 import {Collection, ObjectId} from "mongodb";
-import {EntitySerializer, Identifiable, Repository} from 'talaria'
+import {EntitySerializer, Identifiable, ReadWriteRepository} from 'talaria'
 
 export class RepositoryFiller<D extends Identifiable> {
 
@@ -22,7 +22,7 @@ export class RepositoryFiller<D extends Identifiable> {
 
     }
 
-    async fillRepository(repository: Repository<D>) {
+    async fillRepository(repository: ReadWriteRepository<D>) {
 
         await this.collection.find({}).forEach(document => {
 
